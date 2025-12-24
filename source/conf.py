@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'web'
+project = '天津理工大学物联网科协'
 copyright = '2025, TJUT'
 author = 'TJUT'
 release = '1.0'
