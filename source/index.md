@@ -4,10 +4,12 @@
 本网站用于整理与归档相关技术资料，采用结构化文档体系，便于长期维护与查阅。
 
 ```{toctree}
-:maxdepth: 4
+:maxdepth: 1
 :caption: 目录
 
+download/index
+c/index
 stm32/index
 linux/index
-c/index
+
 ```
