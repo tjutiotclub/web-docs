@@ -1,0 +1,9 @@
+/* 解锁正文最大宽度（外层） */
+.wy-nav-content-wrap {
+    max-width: none;
+}
+
+/* 解锁正文最大宽度（内层，保险） */
+.wy-nav-content {
+    max-width: none;
+}
