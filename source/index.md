@@ -7,7 +7,7 @@
 :maxdepth: 1
 :caption: 目录
 
-download/index
+download
 c/index
 stm32/index
 linux/index
