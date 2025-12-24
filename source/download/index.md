@@ -4,8 +4,8 @@
 
 下载链接：
 
-[123云盘下载链接]: https://www.123pan.com/s/oJ51Td-I9blA
-[百度网盘下载链接]: https://pan.baidu.com/s/1SIo6iYf57dCx4bxAnQ-tgw?pwd=hxrj
+[123云盘下载链接]: https://www.123pan.com/s/oJ51Td-I9blA	"123云盘下载链接"
+[百度网盘下载链接]: https://pan.baidu.com/s/1SIo6iYf57dCx4bxAnQ-tgw?pwd=hxrj	"百度网盘下载链接"
 
 ```{toctree}
 :maxdepth: 1
