@@ -67,3 +67,32 @@ void HAL_GPIO_TogglePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 ```
 HAL_GPIO_TogglePin(GPIOA,GPIO_PIN10,GPIO_PIN_SET)//翻转PA10引脚输出的电平状态
 ```
+
+***
+
+HAL_GPIO_EXTI_Callback函数
+
+函数原型：
+
+```
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
+```
+
+| 函数名          | HAL_GPIO_EXTI_Callback                           |
+| --------------- | ------------------------------------------------ |
+| 函数作用        | 外部中断回调函数                                 |
+| 返回值          | void                                             |
+| 参数1：GPIO_Pin | 触发中断的引脚，不需要用户输入参数，程序自动传入 |
+
+应用示例：
+
+```
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if(GPIO_Pin == GPIO_PIN_10)//判断是否是期望引脚触发中断
+	{
+	//TODO
+	}
+}
+```
+
