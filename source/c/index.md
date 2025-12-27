@@ -149,7 +149,7 @@ switch
 ```{toctree}
 :maxdepth: 1
 
-criculation
+circulation
 ```
 
 ---
