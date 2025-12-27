@@ -285,7 +285,7 @@ function
 ```{toctree}
 :maxdepth: 1
 
-src & inc
+src&inc
 ```
 
 ---
