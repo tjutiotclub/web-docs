@@ -173,7 +173,7 @@ GPIO、定时器、中断、ADC 以及基础通信，并不是零散的知识点
 ## 开发板教学文档：
 
 ```{toctree}
-:maxdepth: 0
+:maxdepth: 1
 
 lesson0
 lesson1

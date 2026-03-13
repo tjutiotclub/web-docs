@@ -6,7 +6,8 @@
 
 本系列教程基于我校自主设计的 STM32F1 学习板。
 
-源代码链接：待上传。 
+源代码链接：[下载仓库 · cc0717/STM32例程 - Gitee.com](https://gitee.com/cc0717/stm32-routine/repository/archive/master.zip) 
+
 相关工具版本：
 
 - STM32CubeMX：6.21.3+i
@@ -64,5 +65,3 @@
 点击顶部的GENERATE CODE，等待代码生成，打开工程。
 
 ![](./pic/8.png)
-
-
