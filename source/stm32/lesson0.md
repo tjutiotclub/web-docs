@@ -10,7 +10,7 @@
 
 相关工具版本：
 
-- STM32CubeMX：6.21.3+i
+- STM32CubeMX：6.21.3+
 
 - keil MDK-ARM：5.43.0.0
 
@@ -26,42 +26,42 @@
 
 ## STEP1.选择芯片
 
-1.打开CubeMX后，在入口页面，我们可以清晰的看到主页中央的“ACCESS TO MCU SELECTOR”字样，点击即可进入MCU选择器，开始选择我们的MCU型号。
+1.打开CubeMX后，在入口页面，我们可以清晰的看到主页中央的“ACCESS TO MCU SELECTOR”字样，点击即可进入MCU选择器，开始选择MCU型号。
 
-![](./pic/1.png "图1")
+<img src="./pic/1.png" title="图1" alt="" style="zoom:50%;">
 
 2.进入MCU选择器后，搜索 STM32F103RCT6，选择芯片，开始工程：
 
-![](./pic/2.png)
+<img src="./pic/2.png" title="" alt="" style="zoom:50%;">
 
 ## STEP2.时钟配置
 
 1.在 System Core下选择RCC选项，在RCC mode and Configuration中的High Speed Clock(HSE)下选择Crystal/Ceramic Resonator；
 
-![](./pic/3.png)
+<img src="./pic/3.png" title="" alt="" style="zoom:50%;">
 
 2.点击顶部的 Clock Configuration，进行主频配置，将HCLK(MHZ)设置为于下方蓝字相同数值，程序会自动把MCU设置为全速运行状态；
 
-![](./pic/4.png)
+<img src="./pic/4.png" title="" alt="" style="zoom:50%;">
 
 ## STEP3.Debug端口设置
 
 点击顶部的 Pinout & Configuartion，选择SYS，在Debug下拉框中选择Serial Wire；
 
-![](./pic/5.png)
+<img src="./pic/5.png" title="" alt="" style="zoom:50%;">
 
 ## STEP4.项目设置
 
 1.点击顶部的 Project Manager，给工程起名，选择存放目录，在Toolchain/IDE中选择MDK-ARM；
 
-![](./pic/6.png)
+<img src="./pic/6.png" title="" alt="" style="zoom:50%;">
 
 2.点击旁边的 Code Generator，勾选Copy only the necessary library files 以及 Generate peripheral initialization as a pair of ‘.c/.h’ files per peripheral；
 
-![](./pic/7.png)
+<img src="./pic/7.png" title="" alt="" style="zoom:50%;">
 
 ## STEP5.生成项目
 
 点击顶部的GENERATE CODE，等待代码生成，打开工程。
 
-![](./pic/8.png)
+<img src="./pic/8.png" title="" alt="" style="zoom:50%;">
