@@ -33,7 +33,7 @@
 
 * ⑧ 编译日志输出窗口
 
-<img title="" src="./pic/9.png" alt="" style="zoom:50%;">
+<img title="" src="./pic/9.png" >
 
 ---
 
@@ -41,7 +41,7 @@
 
 对于首次打开的工程，在进行代码编写之前，需要完成基本配置（如编译器与调试器设置）。点击工具栏中的“工程设置”（⑤），进入配置页面。
 
-<img title="" src="file:///E:/web-docs/source/stm32/pic/84716e9e-45c7-434b-b819-a0bca66e9e76.png" alt="84716e9e-45c7-434b-b819-a0bca66e9e76" style="zoom:67%;">
+<img title="" src="file:///E:/web-docs/source/stm32/pic/84716e9e-45c7-434b-b819-a0bca66e9e76.png">
 
 ---
 
@@ -51,7 +51,7 @@
 
 ARM 第六代编译器（AC6）基于 LLVM / Clang 架构实现（armclang），相比旧版本编译器在标准兼容性以及对 UTF-8（如中文字符）的支持方面更加完善。
 
-<img src="file:///E:/web-docs/source/stm32/pic/10.png" title="" alt="10" style="zoom:67%;">
+<img src="file:///E:/web-docs/source/stm32/pic/10.png" >
 
 ---
 
@@ -59,7 +59,7 @@ ARM 第六代编译器（AC6）基于 LLVM / Clang 架构实现（armclang），
 
 进入 “Debug” 页面，选择调试器类型。本实验使用开发板自带的 CMSIS-DAP 调试器（CMSIS-DAP Debugger）。
 
-<img src="file:///E:/web-docs/source/stm32/pic/9fd5a6a7-2682-4b87-83d7-276aed24b980.png" title="" alt="9fd5a6a7-2682-4b87-83d7-276aed24b980" style="zoom:67%;">
+<img src="file:///E:/web-docs/source/stm32/pic/9fd5a6a7-2682-4b87-83d7-276aed24b980.png">
 
 ---
 
@@ -75,4 +75,6 @@ ARM 第六代编译器（AC6）基于 LLVM / Clang 架构实现（armclang），
 
 配置完成后，点击“OK”保存并退出。
 
-<img src="file:///E:/web-docs/source/stm32/pic/b362963f-cbcf-4a53-89ea-91b69b2c3f98.png" title="" alt="b362963f-cbcf-4a53-89ea-91b69b2c3f98" style="zoom:67%;"><img src="file:///E:/web-docs/source/stm32/pic/652d66bf-4234-498e-b6dd-04c4a0dfcd07.png" title="" alt="652d66bf-4234-498e-b6dd-04c4a0dfcd07" style="zoom:67%;">
+<img src="file:///E:/web-docs/source/stm32/pic/b362963f-cbcf-4a53-89ea-91b69b2c3f98.png">
+
+
