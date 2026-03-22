@@ -334,4 +334,131 @@ GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
 GPIO_InitStruct.Pull = GPIO_NOPULL;
 ```
 
+##### 2.1.3 Speed（输出速度）
+
+在完成 GPIO 工作模式配置后，对于输出模式或复用模式，还需要进一步配置引脚的输出速度参数。`Speed` 参数用于控制 GPIO 引脚的驱动能力和电平翻转速度，是影响信号质量的重要因素之一。
+
+在 STM32F103RCT6 中，GPIO 的输出速度本质上对应的是引脚内部驱动电路的响应能力，其程序定义如下：
+
+```c
+#define GPIO_SPEED_FREQ_LOW       0x00000002u   /*!< Low speed      */
+#define GPIO_SPEED_FREQ_MEDIUM    0x00000001u   /*!< Medium speed   */
+#define GPIO_SPEED_FREQ_HIGH      0x00000003u   /*!< High speed     */
+```
+
+需要注意的是，这里的“速度”并非指信号的通信速率，而是指 GPIO 输出电平从低到高或从高到低的变化速度（即上升沿和下降沿的快慢）。
+
+###### 2.1.3.1 速度等级说明
+
+在 STM32F1 系列中，GPIO 输出速度通常对应以下三个等级：
+
+* 低速（Low Speed）：约 2 MHz
+
+* 中速（Medium Speed）：约 10 MHz
+
+* 高速（High Speed）：约 50 MHz
+
+这里的 MHz 并不是严格意义上的时钟频率，而是对引脚最大翻转能力的一个近似描述。
+
+###### 2.1.3.2 Speed 参数的作用
+
+GPIO 输出速度主要影响以下几个方面：
+
+**① 信号上升沿/下降沿速度**  
+
+速度越高，引脚电平变化越快，适用于高速数字信号输出。
+
+**② 驱动能力**  
+
+较高的速度对应更强的驱动能力，可以带动更大的负载。
+
+**③ 电磁干扰（EMI）**  
+
+速度越高，信号边沿越陡，可能带来更强的电磁干扰。
+
+###### 2.1.3.3 实际使用建议
+
+在实际应用中，应根据具体需求合理选择 GPIO 输出速度：
+
+| 应用场景           | 推荐速度  |
+| -------------- | ----- |
+| LED 控制         | 低速或中速 |
+| 普通IO输出         | 中速    |
+| 高速通信（SPI、时钟信号） | 高速    |
+
+一般情况下，不建议默认全部配置为高速模式，以避免不必要的功耗增加和电磁干扰问题。
+
+###### 2.1.3.4 配置示例
+
+```c
+GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+```
+
+该配置表示将 GPIO 引脚设置为高速输出模式，适用于对响应速度要求较高的场景。
+
+#### 2.2 GPIO初始化的使用方法（HAL_GPIO_Init）
+
+在前一节中，我们已经介绍了 GPIO 配置所需的各项参数（`Pin`、`Mode`、`Pull`、`Speed`）。在实际开发中，这些参数需要组合使用，并通过 `HAL_GPIO_Init` 函数完成初始化配置。
+
+GPIO 初始化的基本使用流程如下。 
+
+##### 2.2.1定义初始化结构体
+
+```c
+GPIO_InitTypeDef GPIO_InitStruct = {0};
+```
+
+该结构体用于存放 GPIO 的各项配置参数。 
+
+##### 2.2.2配置引脚及工作模式
+
+根据实际需求，对结构体成员进行赋值。例如配置 PA5 为推挽输出：
+
+```c
+GPIO_InitStruct.Pin = GPIO_PIN_5;  
+GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;  
+GPIO_InitStruct.Pull = GPIO_NOPULL;  
+GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; 
+```
+
+##### 2.2.3调用初始化函数
+
+HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+执行该函数后，相关配置将写入 GPIO 寄存器，引脚开始按照设定方式工作。 
+
+##### 2.2.4完整示例
+
+```c
+GPIO_InitTypeDef GPIO_InitStruct = {0};  
+
+/* 1. 开启GPIOA时钟 */  
+__HAL_RCC_GPIOA_CLK_ENABLE();  
+
+/* 2. 配置引脚参数 */  
+GPIO_InitStruct.Pin = GPIO_PIN_5;  
+GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;  
+GPIO_InitStruct.Pull = GPIO_NOPULL;  
+GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;  
+
+/* 3. 初始化GPIO */  
+HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+```
+
+---
+
+## 三、CubeMX中配置GPIO
+
+在第二部分中，我们已经介绍了GPIO配置的相关参数及其实现方法。
+
+本章将基于上述原理，借助CubeMX工具完成GPIO引脚的快速配置过程，
+并建立“图形化配置”与“代码实现”之间的对应关系。
+
+关于如何建立CubeMX工程文件及完成基本系统配置，
+已在《STM32系列课程0》中进行说明，这里不再赘述。
+
+实验所使用的教学板上预装有8个LED灯珠，
+本次将以LED1（PA4）为例进行说明。
+
 
