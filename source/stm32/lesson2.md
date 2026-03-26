@@ -1,4 +1,4 @@
-# STM32系列课程3——LED点亮与熄灭
+# STM32系列课程2——LED点亮与熄灭
 
 源代码链接：[下载仓库 · cc0717/STM32例程 - Gitee.com](https://gitee.com/cc0717/stm32-routine/repository/archive/master.zip)
 
@@ -460,5 +460,3 @@ HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 实验所使用的教学板上预装有8个LED灯珠，
 本次将以LED1（PA4）为例进行说明。
-
-
