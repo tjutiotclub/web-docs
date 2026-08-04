@@ -164,8 +164,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 ## 脉冲宽度调制（PWM）
 
----
-
 HAL_TIM_PWM_Start函数
 -------------------
 
@@ -298,8 +296,6 @@ __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500); // 设置占空比（比较�
 ---
 
 ## 输入捕获（Input Capture）
-
----
 
 ### HAL_TIM_IC_Start函数
 
@@ -454,8 +450,6 @@ uint32_t value = HAL_TIM_ReadCapturedValue(&htim1, TIM_CHANNEL_1);
 ---
 
 ## 编码器模式（Encoder）
-
-* * *
 
 ### HAL_TIM_Encoder_Start函数
 

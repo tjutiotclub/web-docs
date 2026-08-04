@@ -26,7 +26,7 @@ switch (expression)
         // 其他情况
         break;
 }
-````
+```
 
 其中：
 
