@@ -46,7 +46,6 @@
 :caption: 目录
 
 download
-学习路线
 c/index
 stm32/index
 linux/index
