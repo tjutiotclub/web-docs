@@ -291,7 +291,7 @@ __HAL_TIM_SET_COMPARE函数
 __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500); // 设置占空比（比较值为500）
 ```
 
-<mark>注意：占空比 = CCR / ARR，例如ARR=1000，CCR=500时，占空比为50%</mark>
+<mark>注意：向上计数、PWM模式1的常见配置中，占空比约为 CCR / (ARR + 1)。例如 ARR=999、CCR=500 时，占空比为50%</mark>
 
 ---
 
@@ -557,5 +557,32 @@ HAL_TIM_Encoder_Stop_IT(&htim1, TIM_CHANNEL_ALL); // 停止编码器（中断模
 ```c
 int16_t cnt = __HAL_TIM_GET_COUNTER(&htim1); // 获取当前计数值
 ```
+
+<mark>注意：只有确认计数范围和溢出处理方式后，才应直接转换为 int16_t。若使用32位定时器，应使用 uint32_t 保存完整计数值</mark>
+
+---
+
+### __HAL_TIM_SET_COUNTER宏定义
+
+函数原型：
+
+```c
+#define __HAL_TIM_SET_COUNTER(__HANDLE__, __COUNTER__)
+```
+
+| 名称 | __HAL_TIM_SET_COUNTER |
+| --- | --- |
+| 函数作用 | 设置定时器当前计数值 CNT |
+| 返回值 | 无（宏定义） |
+| 参数1：**HANDLE** | 定时器句柄，如 &htim1 |
+| 参数2：**COUNTER** | 需要写入的计数值 |
+
+应用示例：
+
+```c
+__HAL_TIM_SET_COUNTER(&htim1, 0); // 将当前计数值清零
+```
+
+该宏常用于编码器位置归零或重新开始测量时间。写入值应位于当前定时器的有效计数范围内。
 
 <mark>注意：计数值会随编码器旋转方向自动增减</mark>

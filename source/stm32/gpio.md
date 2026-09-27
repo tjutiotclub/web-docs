@@ -55,7 +55,8 @@ GPIO_PinState HAL_GPIO_ReadPin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 应用示例：
 
 ```c
-HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_10)//读取PA10引脚的电平状态
+GPIO_PinState pin_state;
+pin_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10); // 读取PA10引脚的电平状态
 ```
 
 <mark>注意：该函数只读取输入寄存器状态，未初始化为输入模式时结果可能不符合预期</mark>
@@ -81,7 +82,7 @@ void HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
 应用示例：
 
 ```c
-HAL_GPIO_WritePin(GPIOA,GPIO_PIN_10,GPIO_PIN_SET)//设置PA10引脚为高电平输出
+HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET); // 设置PA10引脚为高电平输出
 ```
 
 ***
@@ -104,7 +105,7 @@ void HAL_GPIO_TogglePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 应用示例：
 
 ```c
-HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_10)//翻转PA10引脚输出的电平状态
+HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_10); // 翻转PA10引脚输出的电平状态
 ```
 
 <mark>注意：仅对输出模式引脚有效</mark>

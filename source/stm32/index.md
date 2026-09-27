@@ -187,6 +187,7 @@ lesson3
 ```{toctree}
 :maxdepth: 1
 
+hal
 gpio
 tim
 i2c
