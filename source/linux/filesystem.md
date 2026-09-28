@@ -1,8 +1,8 @@
 # Linux文件系统与路径
 
-Linux 将普通文件、目录、硬件设备和部分内核运行信息组织在同一棵目录树中。理解这棵目录树，是使用命令行、编写程序和操作嵌入式设备的基础。
+Linux 把普通文件、目录、硬件设备和部分内核运行信息组织在同一棵目录树中。本章建立这套文件系统模型，下一章再使用 Shell 命令完成实际操作。
 
-本章所有示例均在 **WSL2 的 Ubuntu** 中执行。示例用户名统一使用 `student`，实际操作时应以自己的用户名和主目录为准。
+本系列以 **WSL2 的 Ubuntu** 为统一示例环境。示例用户名使用 `student`，实际路径会随用户名和系统配置变化。
 
 ## 学习目标
 
@@ -10,62 +10,19 @@ Linux 将普通文件、目录、硬件设备和部分内核运行信息组织�
 
 - 理解 Linux 单一目录树的组织方式。
 - 区分根目录、用户主目录和当前工作目录。
-- 正确使用绝对路径与相对路径。
-- 使用 `pwd`、`cd`、`ls`、`mkdir`、`touch` 等命令操作路径和文件。
-- 认识普通文件、目录、符号链接、字符设备和块设备。
-- 说明 `/home`、`/etc`、`/usr`、`/var`、`/tmp`、`/dev`、`/proc` 和 `/sys` 的用途。
-- 理解文件系统、存储设备和挂载点之间的关系。
-- 在 WSL 与 Windows 之间正确访问文件。
+- 区分绝对路径与相对路径。
+- 理解 `/`、`.`、`..` 和 `~` 在路径中的含义。
+- 认识普通文件、目录、链接和设备文件。
+- 说明 Linux 主要系统目录的用途。
+- 理解 inode、文件名与文件数据之间的关系。
+- 理解文件系统、存储设备与挂载点之间的关系。
+- 理解 WSL 中 Linux 文件系统和 Windows 磁盘的映射关系。
 
 ---
 
-## 一、准备本章练习目录
+## 一、Linux只有一棵目录树
 
-打开 WSL 中的 Ubuntu 终端，先确认当前用户和所在目录：
-
-```bash
-whoami
-pwd
-```
-
-典型输出：
-
-```text
-student
-/home/student
-```
-
-创建本章专用练习目录：
-
-```bash
-mkdir -p ~/linux-course/filesystem
-cd ~/linux-course/filesystem
-pwd
-```
-
-输出应类似：
-
-```text
-/home/student/linux-course/filesystem
-```
-
-其中：
-
-- `mkdir` 用于创建目录。
-- `-p` 表示父目录不存在时一并创建。
-- `~` 代表当前用户的主目录。
-- `cd` 用于改变当前工作目录。
-- `pwd` 用于显示当前工作目录的绝对路径。
-
-本章中的练习文件都放在该目录内，避免影响系统文件和个人项目。
-
-> **图片占位：** WSL Ubuntu 终端中依次执行 `whoami`、`mkdir -p`、`cd` 和 `pwd`，框选最终路径 `/home/用户名/linux-course/filesystem`。
-
----
-
-## 二、Linux只有一棵目录树
-
-Windows 通常使用盘符区分不同存储位置：
+Windows 常使用盘符区分存储位置：
 
 ```text
 C:\
@@ -73,7 +30,7 @@ D:\
 E:\
 ```
 
-Linux 使用一棵从根目录 `/` 开始的目录树。磁盘分区、U 盘、网络文件系统和虚拟文件系统都接入这棵目录树中的某个位置。
+Linux 使用一棵从根目录开始的目录树。根目录写作 `/`，它是所有路径的共同起点。
 
 ```text
 /
@@ -89,467 +46,282 @@ Linux 使用一棵从根目录 `/` 开始的目录树。磁盘分区、U 盘、�
 └── mnt
 ```
 
-根目录写作：
+硬盘分区、U 盘、网络存储和虚拟文件系统都通过某个目录接入这棵树。用户访问的是统一路径，不需要为每个 Linux 文件系统分配新的盘符。
+
+根目录和用户主目录不是同一个位置：
+
+```text
+/                      Linux目录树的根
+/home/student          用户student的主目录
+```
+
+这两个概念常被初学者混淆。“根目录”描述文件系统层级，“主目录”描述某个用户保存个人文件的位置。
+
+---
+
+## 二、目录树如何表示位置
+
+路径由一组目录名和文件名组成，各级名称使用正斜杠 `/` 分隔。
+
+```text
+/home/student/projects/sensor/main.c
+```
+
+从左向右读取：
+
+1. 从根目录 `/` 开始。
+2. 进入 `home`。
+3. 进入用户目录 `student`。
+4. 进入 `projects`。
+5. 进入项目目录 `sensor`。
+6. 找到文件 `main.c`。
+
+可以把路径理解为目标在目录树中的地址。
 
 ```text
 /
+└── home
+    └── student
+        └── projects
+            └── sensor
+                └── main.c
 ```
 
-它是整棵目录树的起点。以下路径都从根目录开始：
+Linux 路径使用 `/`，Windows 路径通常使用 `\`。二者不能直接互换：
 
 ```text
-/home/student
-/etc/hosts
-/usr/bin/gcc
-/mnt/c/Users
+Linux：   /home/student/projects
+Windows： C:\Users\student\projects
 ```
-
-路径中的 `/` 同时承担两个作用：
-
-- 单独出现时表示根目录。
-- 出现在路径中时用于分隔各级目录名。
-
-Linux 路径使用正斜杠 `/`，不是 Windows 路径中的反斜杠 `\`。
 
 ---
 
 ## 三、当前工作目录
 
-Shell 始终在某个目录中运行，这个目录称为当前工作目录。许多相对路径都从这里开始解析。
+每个 Shell 进程都维护一个当前工作目录。相对路径从这个位置开始解释。
 
-### 使用pwd查看当前目录
-
-```bash
-pwd
-```
-
-`pwd` 是 print working directory 的缩写。若当前位于本章练习目录，输出类似：
+假设当前工作目录是：
 
 ```text
-/home/student/linux-course/filesystem
+/home/student/projects/sensor
 ```
 
-### 使用cd切换目录
+那么相对路径：
 
-进入根目录：
-
-```bash
-cd /
-pwd
+```text
+src/main.c
 ```
 
-返回用户主目录：
+表示的完整位置是：
 
-```bash
-cd ~
-pwd
+```text
+/home/student/projects/sensor/src/main.c
 ```
 
-也可以直接执行不带参数的 `cd`：
+当前工作目录只影响相对路径，不改变绝对路径的含义。
 
-```bash
-cd
-pwd
+同一个相对路径在不同位置可能指向不同目标：
+
+```text
+当前目录：/home/student/project-a
+相对路径：src/main.c
+最终位置：/home/student/project-a/src/main.c
 ```
 
-不带参数的 `cd` 同样返回当前用户的主目录。
-
-回到本章练习目录：
-
-```bash
-cd ~/linux-course/filesystem
+```text
+当前目录：/home/student/project-b
+相对路径：src/main.c
+最终位置：/home/student/project-b/src/main.c
 ```
 
-### 使用cd -返回上一次目录
-
-先进入 `/tmp`：
-
-```bash
-cd /tmp
-```
-
-再执行：
-
-```bash
-cd -
-```
-
-Shell 会切换回上一次所在目录，并输出对应路径。再次执行 `cd -`，会在两个目录之间来回切换。
-
-这在同时操作源码目录和构建目录时很方便。
+这就是文件操作前必须确认当前目录的原因。
 
 ---
 
 ## 四、绝对路径与相对路径
 
-路径用于描述文件或目录的位置。根据起点不同，路径分为绝对路径和相对路径。
-
 ### 1. 绝对路径
 
-绝对路径从根目录 `/` 开始，完整描述目标在整棵目录树中的位置。
-
-例如：
+绝对路径以 `/` 开头，从根目录完整描述目标位置。
 
 ```text
-/home/student/linux-course/filesystem
+/home/student/linux-course/shell/data/sensor01.txt
 ```
 
-无论当前工作目录在哪里，这个路径始终指向同一个位置。
+无论当前工作目录在哪里，该路径始终指向同一个目标。
 
-执行：
+绝对路径适合：
 
-```bash
-cd /home/student/linux-course/filesystem
-```
-
-需要把 `student` 替换成自己的用户名。更通用的写法是：
-
-```bash
-cd "$HOME/linux-course/filesystem"
-```
-
-`$HOME` 保存当前用户主目录的绝对路径。
+- 配置文件中需要明确指定固定位置。
+- 日志需要准确记录文件位置。
+- 当前工作目录无法确定。
+- 跨越多个目录层级。
 
 ### 2. 相对路径
 
-相对路径不以 `/` 开头，它以当前工作目录作为起点。
+相对路径不以 `/` 开头，以当前工作目录作为起点。
 
-创建目录结构：
-
-```bash
-cd ~/linux-course/filesystem
-mkdir -p project/src project/include project/build
-```
-
-当前目录结构为：
+假设当前目录为：
 
 ```text
-filesystem/
-└── project/
-    ├── build/
-    ├── include/
-    └── src/
+/home/student/linux-course/shell
 ```
 
-进入 `project`：
+相对路径：
 
-```bash
-cd project
+```text
+data/sensor01.txt
 ```
 
-此时下面两个命令指向同一个目录：
+对应绝对路径：
 
-```bash
-cd src
+```text
+/home/student/linux-course/shell/data/sensor01.txt
 ```
 
-```bash
-cd /home/student/linux-course/filesystem/project/src
+相对路径适合：
+
+- 在同一项目内部引用文件。
+- 让项目整体移动后仍保持内部关系。
+- 交互操作时减少重复输入。
+
+### 3. 两种路径描述同一目标
+
+假设当前目录为 `/home/student/project`：
+
+```text
+绝对路径：/home/student/project/include/sensor.h
+相对路径：include/sensor.h
 ```
 
-第一个使用相对路径，第二个使用绝对路径。
-
-### 3. 如何选择
-
-- 交互操作时，相对路径通常更短。
-- 脚本、配置文件和错误日志需要明确位置时，绝对路径更直观。
-- 路径是否正确取决于上下文，不能只看字符串长短。
-
-执行相对路径命令前，应使用 `pwd` 确认当前目录。
+两种写法指向同一个文件，只是起点不同。
 
 ---
 
 ## 五、路径中的特殊符号
 
-### 1. 根目录 `/`
+### 根目录 `/`
 
-```bash
-cd /
+单独出现的 `/` 表示整棵目录树的根。出现在路径中时，它分隔各级名称。
+
+```text
+/
+/etc
+/etc/hosts
 ```
 
-切换到整棵 Linux 目录树的起点。
+### 当前目录 `.`
 
-### 2. 当前目录 `.`
-
-一个点表示当前目录：
-
-```bash
-cd ~/linux-course/filesystem/project
-ls .
-```
-
-`ls .` 表示列出当前目录内容。
-
-当前目录符号常用于执行当前目录中的程序：
+一个点表示当前工作目录。
 
 ```text
 ./program
+./data/sensor.txt
 ```
 
-这里的 `./` 表示“当前目录下的”。
+`./program` 表示当前目录中的 `program`，而不是从系统命令搜索路径中寻找同名程序。
 
-### 3. 上级目录 `..`
+### 上级目录 `..`
 
-两个点表示当前目录的父目录：
+两个点表示当前目录的父目录。
 
-```bash
-cd ~/linux-course/filesystem/project/src
-cd ..
-pwd
-```
-
-输出应为：
+假设当前目录是：
 
 ```text
-/home/student/linux-course/filesystem/project
+/home/student/project/src
 ```
 
-可以连续使用：
-
-```bash
-cd ../..
-```
-
-这表示连续返回两级目录。
-
-### 4. 用户主目录 `~`
-
-波浪号由 Shell 展开为当前用户的主目录：
-
-```bash
-echo ~
-```
-
-典型输出：
+则：
 
 ```text
-/home/student
+..              /home/student/project
+../include      /home/student/project/include
+../../docs      /home/student/docs
 ```
 
-因此：
+每出现一个 `..`，就沿目录树向上移动一级。
 
-```bash
-cd ~/linux-course
+### 用户主目录 `~`
+
+波浪号由 Shell 展开为当前用户的主目录。
+
+对用户 `student`：
+
+```text
+~                       /home/student
+~/projects              /home/student/projects
+~/projects/demo         /home/student/projects/demo
 ```
 
-等价于：
-
-```bash
-cd /home/student/linux-course
-```
-
-### 5. 上一次目录 `-`
-
-`cd -` 中的短横线代表上一次工作目录。它只能在 `cd` 等理解该参数的命令中使用，不是通用路径符号。
+`~` 是 Shell 语法，不是磁盘上真实存在的目录名。
 
 ### 特殊符号总结
 
 | 符号 | 含义 | 示例 |
 | --- | --- | --- |
-| `/` | 根目录或目录分隔符 | `/etc/hosts` |
-| `.` | 当前目录 | `./program` |
-| `..` | 上级目录 | `cd ..` |
-| `~` | 当前用户主目录 | `cd ~/projects` |
-| `-` | 上一次工作目录，仅用于特定命令 | `cd -` |
+| `/` | 根目录或路径分隔符 | `/etc/hosts` |
+| `.` | 当前工作目录 | `./program` |
+| `..` | 上级目录 | `../include` |
+| `~` | 当前用户主目录 | `~/projects` |
 
 ---
 
-## 六、使用ls观察目录
-
-`ls` 用于列出目录内容。
-
-### 基本用法
-
-```bash
-cd ~/linux-course/filesystem
-ls
-```
-
-列出指定目录：
-
-```bash
-ls project
-```
-
-### 详细格式
-
-```bash
-ls -l
-```
-
-典型输出：
-
-```text
-drwxr-xr-x 5 student student 4096 Sep 28 10:20 project
-```
-
-各列依次表示：
-
-1. 文件类型和权限
-2. 硬链接数量
-3. 所有者
-4. 所属用户组
-5. 大小
-6. 修改时间
-7. 名称
-
-权限将在“用户、用户组与文件权限”一章详细学习。本章先关注第一列的第一个字符和最后一列的名称。
-
-### 显示隐藏文件
-
-Linux 中名称以 `.` 开头的文件通常不会被普通 `ls` 显示，例如 `.bashrc`。
-
-```bash
-ls -a ~
-```
-
-`-a` 表示显示全部条目，包括隐藏文件以及 `.`、`..`。
-
-更常用的组合是：
-
-```bash
-ls -la ~
-```
-
-选项可以组合，`-la` 等价于 `-l -a`。
-
-隐藏文件没有特殊的“隐藏属性”，它只遵循名称以点开头的约定。很多程序把用户级配置保存在主目录的隐藏文件或隐藏目录中。
-
-### 以易读单位显示大小
-
-```bash
-ls -lh
-```
-
-`-h` 表示 human-readable，会使用 K、M、G 等单位显示大小。
-
-### 只查看目录本身
-
-```bash
-ls -ld project
-```
-
-若没有 `-d`，`ls -l project` 会列出 `project` 里面的内容；加入 `-d` 后显示的是 `project` 目录本身的信息。
-
----
-
-## 七、创建文件与目录
-
-### 创建目录
-
-```bash
-cd ~/linux-course/filesystem
-mkdir notes
-```
-
-一次创建多个目录：
-
-```bash
-mkdir docs images output
-```
-
-创建多级目录：
-
-```bash
-mkdir -p demo/src/module
-```
-
-没有 `-p` 时，如果中间的 `demo/src` 不存在，命令会失败。
-
-### 创建空文件
-
-```bash
-touch notes/readme.txt
-```
-
-查看：
-
-```bash
-ls -l notes
-```
-
-若文件不存在，`touch` 会创建空文件；若文件已经存在，`touch` 会更新它的时间戳，不会清空原内容。
-
-### 向文件写入一行文本
-
-```bash
-echo "Linux filesystem practice" > notes/readme.txt
-```
-
-查看内容：
-
-```bash
-cat notes/readme.txt
-```
-
-输出：
-
-```text
-Linux filesystem practice
-```
-
-`>` 会覆盖目标文件。管道和重定向将在 Shell 命令章节详细讲解。
-
----
-
-## 八、Linux文件名与路径规则
+## 六、文件名规则
 
 ### 1. 区分大小写
 
-执行：
+以下名称代表三个不同文件：
 
-```bash
-cd ~/linux-course/filesystem
-touch demo.txt Demo.txt DEMO.txt
-ls demo.txt Demo.txt DEMO.txt
+```text
+sensor.txt
+Sensor.txt
+SENSOR.txt
 ```
 
-这三个名称代表三个不同文件。输入路径时必须保持大小写一致。
+路径中的每一级名称都区分大小写。`Projects` 与 `projects` 是不同目录。
 
-### 2. 点开头表示隐藏文件
+### 2. 点开头表示隐藏条目
 
-```bash
-touch .project.conf
-ls
-ls -a
+名称以 `.` 开头的文件和目录通常被视为隐藏条目：
+
+```text
+.bashrc
+.config
+.git
 ```
 
-普通 `ls` 看不到 `.project.conf`，`ls -a` 可以看到。
+“隐藏”是一种命名约定，不是独立文件属性。它们仍然是普通文件或目录。
 
-### 3. 文件扩展名不是文件类型的决定条件
+用户级配置经常保存在主目录中的隐藏条目里。例如 `.bashrc` 保存 Bash 的用户配置，`.config` 保存许多桌面和命令行程序的配置。
 
-Linux 不依赖扩展名决定文件能否执行或如何存储。扩展名主要帮助用户和程序识别用途。
+### 3. 扩展名不是类型的决定条件
 
-创建一个没有扩展名的文本文件：
+Linux 文件可以没有扩展名：
 
-```bash
-echo "hello" > message
-file message
+```text
+Makefile
+LICENSE
+program
 ```
 
-`file` 会检查文件内容并给出类型判断。
+扩展名用于表达用途和帮助工具识别文件，但内核不会仅凭 `.txt`、`.c` 或 `.sh` 决定内容类型和执行权限。
 
-### 4. 文件名可以包含空格
+### 4. 空格与特殊字符
 
-创建带空格的目录：
+Linux 文件名可以包含空格：
 
-```bash
-mkdir "test data"
+```text
+sensor data.txt
 ```
 
-访问时需要使用引号：
+Shell 使用空格分隔参数，因此操作这类路径时需要引号或转义。为了提高脚本兼容性，工程文件常使用：
 
-```bash
-cd "test data"
-```
+- 英文字母
+- 数字
+- 短横线 `-`
+- 下划线 `_`
 
-也可以使用反斜杠转义空格：
-
-```bash
-cd test\ data
-```
-
-工程目录和源码文件推荐使用英文字母、数字、短横线和下划线，例如：
+例如：
 
 ```text
 sensor-driver
@@ -557,201 +329,199 @@ build_output
 lesson01
 ```
 
-这样的名称在命令行、脚本和不同工具之间更稳定。
+### 5. 路径长度与可读性
 
-### 5. Tab补全路径
-
-回到练习目录：
-
-```bash
-cd ~/linux-course/filesystem
-```
-
-输入：
+多层目录能够表达结构，但层级过深会增加操作成本。项目目录应围绕职责组织：
 
 ```text
-cd pro
+sensor-demo/
+├── src/
+├── include/
+├── docs/
+├── tests/
+└── build/
 ```
 
-按 Tab，Shell 会尝试补全为：
-
-```bash
-cd project/
-```
-
-路径较长时应优先使用 Tab 补全，既能减少输入，也能提前发现路径不存在或拼写错误。
+这种结构比把所有文件放在同一目录中更容易维护。
 
 ---
 
-## 九、Linux常见目录
+## 七、Linux主要目录
 
-进入根目录并查看：
+不同发行版的具体内容有所差异，但关键目录的职责基本一致。
 
-```bash
-cd /
-ls
-```
-
-WSL Ubuntu 会显示一组系统目录。不同系统的具体内容可能不同，但核心用途一致。
-
-| 目录 | 主要用途 | 示例 |
+| 目录 | 主要用途 | 典型内容 |
 | --- | --- | --- |
-| `/home` | 普通用户主目录 | `/home/student` |
-| `/root` | root 用户主目录 | `/root` |
-| `/etc` | 系统和服务配置 | `/etc/hosts` |
-| `/usr` | 程序、库、头文件和共享资源 | `/usr/bin/gcc` |
-| `/var` | 日志、缓存和持续变化的数据 | `/var/log` |
-| `/tmp` | 临时文件 | `/tmp/test.txt` |
-| `/dev` | 设备文件 | `/dev/null` |
-| `/proc` | 进程和内核运行信息 | `/proc/cpuinfo` |
-| `/sys` | 设备、驱动和内核对象信息 | `/sys/class` |
-| `/mnt` | 常用挂载位置 | `/mnt/c` |
-| `/media` | 桌面系统自动挂载可移动设备的常用位置 | `/media/student/...` |
-| `/boot` | 启动相关文件 | 内核和引导配置 |
-| `/opt` | 附加的第三方软件 | `/opt/application` |
+| `/home` | 普通用户个人目录 | 文档、项目、用户配置 |
+| `/root` | root 用户主目录 | root 的个人文件和配置 |
+| `/etc` | 系统范围配置 | 网络、服务、用户配置 |
+| `/usr` | 用户空间程序和资源 | 命令、库、头文件、共享数据 |
+| `/var` | 经常变化的数据 | 日志、缓存、软件包状态 |
+| `/tmp` | 临时数据 | 程序运行时临时文件 |
+| `/dev` | 设备和特殊数据通道 | 串口、磁盘、空设备 |
+| `/proc` | 进程与内核运行信息 | PID 目录、CPU、内存信息 |
+| `/sys` | 设备、驱动与内核对象 | 总线、设备类别、驱动关系 |
+| `/boot` | 启动相关文件 | 内核、引导配置 |
+| `/mnt` | 常用手动或系统挂载位置 | WSL 中的 Windows 磁盘 |
+| `/media` | 可移动设备的常用挂载位置 | U 盘、移动硬盘 |
+| `/opt` | 附加第三方软件 | 独立安装的软件目录 |
 
 ### `/home`与`/root`
 
-普通用户的个人文件存放在 `/home/用户名`。root 用户的主目录是 `/root`，它不位于 `/home` 下。
-
-```bash
-echo "$HOME"
-```
-
-普通用户的输出类似：
+普通用户 `student` 的主目录通常是：
 
 ```text
 /home/student
 ```
 
-### `/etc`
+root 用户的主目录是：
 
-`/etc` 保存系统范围的配置。查看主机名解析文件：
-
-```bash
-cat /etc/hosts
+```text
+/root
 ```
 
-普通用户通常可以读取许多配置，但修改系统配置往往需要管理员权限。
+`/root` 不是根目录 `/`，也不是 `/home` 的子目录。
+
+### `/etc`
+
+`/etc` 保存系统和服务配置。它面向整个系统，而用户个人配置通常放在主目录中的隐藏文件或 `.config` 目录。
 
 ### `/usr`
 
-`/usr` 保存大量用户空间程序、库、头文件和共享数据。例如：
+`/usr` 保存大量用户空间资源：
 
-```bash
-ls -l /usr/bin/gcc
+```text
+/usr/bin       常用命令
+/usr/lib       程序库
+/usr/include   开发头文件
+/usr/share     与架构无关的共享数据
 ```
-
-编译工具和开发库通常安装在 `/usr/bin`、`/usr/lib` 和 `/usr/include` 等位置。
 
 ### `/var`
 
-`/var` 保存运行期间经常变化的数据，例如日志、缓存和软件包状态。
+`/var` 保存运行过程中持续变化的数据：
 
-```bash
-ls /var/log
+```text
+/var/log       系统和服务日志
+/var/cache     缓存
+/var/lib       服务和软件包的持久状态
 ```
-
-排查系统服务问题时，日志通常是重要依据。
 
 ### `/tmp`
 
-`/tmp` 用于临时文件。系统或程序可能定期清理其中内容，因此重要数据不应长期保存在这里。
-
-```bash
-touch /tmp/linux-course-test.txt
-ls -l /tmp/linux-course-test.txt
-```
-
-完成后删除该测试文件：
-
-```bash
-rm /tmp/linux-course-test.txt
-```
+`/tmp` 用于临时数据。系统可能定期清理其中内容，因此它不适合保存长期项目和重要文件。
 
 ---
 
-## 十、认识Linux文件类型
+## 八、文件不只有一种类型
 
-Linux 中“文件”是一个广义概念。普通数据、目录、链接和设备接口都以文件系统对象出现。
+Linux 使用统一的文件系统接口表达不同对象。常见类型包括：
 
-### 使用ls -l判断类型
+| 类型 | 含义 | 例子 |
+| --- | --- | --- |
+| 普通文件 | 文本、程序、图片或其他数据 | `main.c`、`program` |
+| 目录 | 保存名称与文件对象的对应关系 | `/home/student` |
+| 符号链接 | 保存另一个目标的路径 | `current -> releases/v2` |
+| 字符设备 | 按字节流访问的设备 | 串口、终端、`/dev/null` |
+| 块设备 | 按数据块访问的设备 | 磁盘、存储卡 |
+| 命名管道 | 进程间传输数据 | FIFO |
+| 套接字 | 本机或网络进程通信端点 | Unix domain socket |
 
-`ls -l` 输出第一列的第一个字符表示类型：
+目录本身也是一种文件系统对象。它的内容主要是名称与对象之间的映射关系。
 
-| 字符 | 类型 |
-| --- | --- |
-| `-` | 普通文件 |
-| `d` | 目录 |
-| `l` | 符号链接 |
-| `c` | 字符设备 |
-| `b` | 块设备 |
-| `p` | 命名管道 |
-| `s` | 套接字 |
-
-执行：
-
-```bash
-ls -ld /etc /etc/hosts /dev/null
-```
-
-输出开头通常分别是：
-
-```text
-d ... /etc
-- ... /etc/hosts
-c ... /dev/null
-```
-
-说明 `/etc` 是目录，`/etc/hosts` 是普通文件，`/dev/null` 是字符设备。
-
-### 使用file判断内容类型
-
-```bash
-file /etc/hosts
-file /usr/bin/ls
-file ~/linux-course/filesystem/notes/readme.txt
-```
-
-`file` 根据文件内容和结构判断类型，而不是只看扩展名。
-
-### 使用stat查看完整信息
-
-```bash
-stat ~/linux-course/filesystem/notes/readme.txt
-```
-
-`stat` 会显示：
-
-- 文件大小
-- inode 编号
-- 权限
-- 所有者和用户组
-- 访问、修改和状态变更时间
-
-这些信息将在权限和链接部分继续使用。
+“一切皆文件”表达的是接口统一：许多资源可以通过类似打开、读取、写入和关闭的方式访问。它不表示所有对象都把普通数据永久存储在磁盘中。
 
 ---
 
-## 十一、设备文件与虚拟文件系统
+## 九、inode、文件名与文件数据
 
-### 1. `/dev`：设备接口
+理解 inode 可以解释硬链接、删除和文件名之间的关系。
 
-`/dev` 中的条目由系统用于表示设备或特殊数据通道。
+在典型 Linux 文件系统中：
 
-查看几个常见条目：
-
-```bash
-ls -l /dev/null /dev/zero /dev/random
-```
-
-- `/dev/null`：丢弃写入的数据，读取时立即返回结束。
-- `/dev/zero`：读取时持续产生零字节。
-- `/dev/random`：提供随机数据。
-
-嵌入式 Linux 开发板上还可能出现：
+- 目录记录文件名与 inode 的对应关系。
+- inode 保存文件类型、权限、所有者、大小、时间等元数据，并关联数据位置。
+- 文件名属于目录记录，不直接等于文件数据。
 
 ```text
+目录项
+sensor.txt ──> inode 1052 ──> 文件数据
+```
+
+同一个 inode 可以拥有多个文件名：
+
+```text
+sensor.txt ──┐
+             ├──> inode 1052 ──> 文件数据
+backup.txt ──┘
+```
+
+这两个名称称为硬链接。删除其中一个名称不会立即删除数据，只要仍有其他硬链接引用该 inode，文件内容仍然存在。
+
+当最后一个硬链接被删除，并且没有进程继续打开该文件时，文件系统才会回收相应数据空间。
+
+---
+
+## 十、符号链接与硬链接
+
+### 1. 符号链接
+
+符号链接保存目标路径：
+
+```text
+current -> releases/version-2
+```
+
+访问 `current` 时，系统继续解析其保存的目标路径。
+
+符号链接可以：
+
+- 指向普通文件或目录。
+- 使用相对路径或绝对路径作为目标。
+- 跨越不同文件系统。
+- 在目标不存在时继续保留，但会成为失效链接。
+
+常见用途包括：
+
+- 为版本目录提供稳定入口。
+- 为较长路径建立短名称。
+- 在不复制数据的情况下从另一位置引用目标。
+
+### 2. 硬链接
+
+硬链接是同一 inode 的另一个文件名。它不保存目标路径，而是直接关联同一文件对象。
+
+硬链接的特点：
+
+- 不能跨文件系统。
+- 普通用户通常不为目录创建硬链接。
+- 删除其中一个名称不影响其他硬链接访问数据。
+- 读取任何一个名称都会得到同一份内容。
+
+### 3. 两类链接对比
+
+| 特性 | 符号链接 | 硬链接 |
+| --- | --- | --- |
+| 本质 | 保存目标路径 | 同一 inode 的另一个名称 |
+| 可指向目录 | 可以 | 普通用户通常不可以 |
+| 可跨文件系统 | 可以 | 不可以 |
+| 原名称删除后 | 可能失效 | 仍可访问数据 |
+| 是否拥有独立inode | 是 | 与目标相同 |
+
+工程中最常见的是符号链接，inode 和硬链接则帮助理解文件系统的内部关系。
+
+---
+
+## 十一、`/dev`：把设备放入目录树
+
+`/dev` 中的条目表示设备或特殊数据通道。
+
+常见名称包括：
+
+```text
+/dev/null
+/dev/zero
+/dev/random
 /dev/ttyS0
 /dev/ttyUSB0
 /dev/ttyACM0
@@ -759,179 +529,108 @@ ls -l /dev/null /dev/zero /dev/random
 /dev/spidev0.0
 ```
 
-这些名称分别可能对应串口、USB 转串口、USB CDC 串口、I2C 控制器和用户空间 SPI 设备。设备节点是否存在，取决于硬件、内核驱动和系统配置。
+其中：
 
-WSL 对 Windows USB 设备的访问需要额外连接步骤，因此本章只观察 WSL 当前已有的 `/dev` 内容。开发板设备节点将在嵌入式 Linux 实践中操作。
+- `/dev/null` 丢弃写入的数据。
+- `/dev/zero` 读取时产生零字节。
+- `/dev/random` 提供随机数据。
+- `/dev/ttyS0` 可能表示片上串口。
+- `/dev/ttyUSB0` 可能表示 USB 转串口设备。
+- `/dev/ttyACM0` 可能表示 USB CDC 串口设备。
+- `/dev/i2c-0` 可能表示 I2C 控制器接口。
+- `/dev/spidev0.0` 可能表示用户空间 SPI 接口。
 
-### 2. `/proc`：进程与内核运行信息
-
-`/proc` 是由内核动态提供的虚拟文件系统。它不把普通文件永久存储到磁盘中。
-
-查看 CPU 信息：
-
-```bash
-cat /proc/cpuinfo
-```
-
-查看内存信息：
-
-```bash
-head /proc/meminfo
-```
-
-查看当前 Shell 的进程信息：
-
-```bash
-echo $$
-ls -l /proc/$$
-```
-
-`$$` 会被 Shell 替换为当前 Shell 的 PID，因此 `/proc/$$` 指向当前 Shell 对应的进程目录。
-
-### 3. `/sys`：设备与内核对象
-
-`/sys` 同样是内核提供的虚拟文件系统，主要按照设备、驱动、总线和类别组织信息。
-
-```bash
-ls /sys
-ls /sys/class
-```
-
-在真实 Linux 开发板上，GPIO、LED、网络接口、存储设备等信息可能通过 `/sys` 中的子系统呈现。
-
-### 4. 为什么它们看起来像文件
-
-Linux 使用统一的文件接口表达多种资源。用户程序可以通过 `open`、`read`、`write`、`close` 等相似操作访问普通文件和许多设备接口。
-
-这形成了常见的 Linux 思想：
+设备节点存在需要三个条件共同满足：
 
 ```text
-一切皆文件
+硬件存在
+  +
+内核识别并加载驱动
+  +
+系统创建或暴露对应接口
 ```
 
-它是一种统一接口的设计思路，不表示所有对象都以普通数据文件形式存储在磁盘中。
+因此，接上设备却没有出现预期节点时，问题不一定在应用程序，也可能在硬件连接、内核驱动或系统配置。
 
 ---
 
-## 十二、符号链接与硬链接
+## 十二、`/proc`与`/sys`：运行中的系统视图
 
-链接让多个路径名称关联到文件系统中的目标。
+### `/proc`
 
-### 1. 创建符号链接
+`/proc` 是内核动态提供的虚拟文件系统，主要表达进程和内核运行信息。
 
-回到练习目录：
-
-```bash
-cd ~/linux-course/filesystem
-```
-
-为笔记文件创建符号链接：
-
-```bash
-ln -s notes/readme.txt readme-link
-ls -l readme-link
-```
-
-输出类似：
+典型内容：
 
 ```text
-lrwxrwxrwx ... readme-link -> notes/readme.txt
+/proc/cpuinfo       CPU信息
+/proc/meminfo       内存信息
+/proc/cmdline       内核启动参数
+/proc/1234          PID为1234的进程信息
 ```
 
-开头的 `l` 表示符号链接，箭头右侧是链接保存的目标路径。
+PID 对应的目录会随着进程启动和退出动态出现、消失。
 
-读取链接：
+### `/sys`
 
-```bash
-cat readme-link
-```
-
-实际读取的是 `notes/readme.txt`。
-
-### 2. 符号链接可以指向目录
-
-```bash
-ln -s project/src source
-cd source
-pwd
-```
-
-符号链接 `source` 指向 `project/src`。这种方式常用于为版本目录、工具链或部署目录提供稳定入口。
-
-### 3. 相对目标与绝对目标
-
-上面的链接保存的是相对路径：
+`/sys` 也是内核提供的虚拟文件系统，主要按照设备、驱动、总线和类别组织内核对象。
 
 ```text
-notes/readme.txt
+/sys/class
+/sys/bus
+/sys/devices
+/sys/block
 ```
 
-相对目标以符号链接所在目录作为起点解析。也可以创建使用绝对路径的链接：
+在嵌入式 Linux 中，GPIO、LED、网络接口、存储设备和电源状态等信息可能通过相应内核子系统出现在 `/sys` 中。
 
-```bash
-ln -s "$HOME/linux-course/filesystem/notes/readme.txt" readme-absolute
-```
+### 与普通磁盘目录的区别
 
-相对链接便于整体移动目录，绝对链接则明确指向系统中的固定位置。
+`/proc` 和 `/sys` 中的内容由内核在运行时生成：
 
-### 4. 目标不存在时
-
-符号链接可以存在，但目标可能已经移动或删除。此时它会成为失效链接。
-
-查看链接保存的目标：
-
-```bash
-readlink readme-link
-```
-
-解析到最终绝对路径：
-
-```bash
-readlink -f readme-link
-```
-
-### 5. 硬链接
-
-创建硬链接：
-
-```bash
-ln notes/readme.txt readme-hard
-ls -li notes/readme.txt readme-hard
-```
-
-`-i` 会显示 inode 编号。两个名称具有相同 inode，表示它们引用同一个文件系统对象。
-
-符号链接和硬链接的主要区别：
-
-| 特性 | 符号链接 | 硬链接 |
-| --- | --- | --- |
-| 保存内容 | 目标路径 | 同一 inode 的另一个名称 |
-| 可跨文件系统 | 可以 | 不可以 |
-| 可指向目录 | 可以 | 普通用户通常不创建目录硬链接 |
-| 目标名称删除后 | 链接可能失效 | 其他硬链接仍可访问数据 |
-| `ls -l` 类型 | `l` | 与普通文件相同 |
-
-日常工程中更常使用符号链接。硬链接有助于理解 inode、文件名与文件数据之间的关系。
+- 不等同于磁盘中的普通文件。
+- 内容会随系统状态变化。
+- 文件大小等元数据不一定具有普通文件的含义。
+- 部分接口可写，写入行为可能直接改变内核或设备状态。
 
 ---
 
-## 十三、文件系统与挂载点
+## 十三、文件系统与挂载
 
 ### 1. 文件系统是什么
 
-文件系统规定数据如何在存储介质上组织、命名和记录。常见 Linux 文件系统包括 ext4、XFS 和 Btrfs；Windows 常见 NTFS。
+文件系统规定数据如何在存储介质上组织、命名和记录。常见类型包括：
 
-一个磁盘可以包含多个分区，每个分区可以保存一个文件系统。Linux 通过“挂载”将文件系统接入现有目录树。
+| 文件系统 | 常见场景 |
+| --- | --- |
+| ext4 | Linux桌面、服务器、开发板根文件系统 |
+| XFS | 大容量Linux服务器 |
+| Btrfs | 支持快照和高级存储管理的Linux系统 |
+| NTFS | Windows磁盘 |
+| FAT32 | U盘、存储卡和跨平台交换 |
+| tmpfs | 使用内存保存的临时文件系统 |
+| proc | 提供进程与内核运行信息 |
+| sysfs | 提供设备与内核对象信息 |
 
-### 2. 挂载点是什么
+### 2. 存储设备、分区与文件系统
 
-假设一个存储设备上的文件系统被挂载到：
+三者处于不同层次：
 
 ```text
-/mnt/data
+存储设备
+  ↓ 划分
+分区
+  ↓ 格式化
+文件系统
+  ↓ 挂载
+Linux目录树中的目录
 ```
 
-挂载完成后，访问 `/mnt/data` 就是在访问该文件系统的根目录。
+一个磁盘可以包含多个分区，每个分区可以拥有不同文件系统。
+
+### 3. 挂载点
+
+挂载把一个文件系统接入现有目录树。接入位置称为挂载点。
 
 ```text
 Linux目录树
@@ -940,367 +639,264 @@ Linux目录树
     └── data  ← 另一个文件系统的挂载点
 ```
 
-Linux 不需要为每个设备分配新的盘符，设备通过挂载点进入统一目录树。
+挂载完成后，访问 `/mnt/data` 就是在访问该文件系统的根。
 
-### 3. 查看当前挂载关系
+同一个目录树可以同时组合：
 
-```bash
-findmnt
-```
+- Linux 根文件系统
+- Windows 磁盘
+- 内存文件系统
+- 内核虚拟文件系统
+- 网络文件系统
+- 外接存储设备
 
-`findmnt` 以树状结构显示文件系统和挂载点。WSL2 中可以看到 Linux 根文件系统以及 Windows 磁盘对应的挂载项。
+这解释了为什么 Linux 不需要为每个存储设备建立新的盘符。
 
-只查看 Windows C 盘对应位置：
+### 4. 卸载的含义
 
-```bash
-findmnt /mnt/c
-```
+卸载会解除文件系统与挂载点的连接。它不等于删除文件系统中的数据。
 
-### 4. 查看文件系统空间
-
-```bash
-df -h
-```
-
-`df` 显示各文件系统的总容量、已用空间、可用空间和挂载点；`-h` 使用易读单位。
-
-查看某个路径所在文件系统：
-
-```bash
-df -h ~
-df -h /mnt/c
-```
-
-这两个路径可能属于不同的文件系统。
-
-### 5. 查看块设备
-
-```bash
-lsblk
-```
-
-`lsblk` 用于列出块设备、分区和挂载点。WSL2 的虚拟磁盘呈现方式与普通物理 Linux 主机不同，因此输出内容会少于真实开发板或服务器，但列名和读取方法相同。
-
-本章只查看挂载状态，不执行手动挂载或卸载。后续需要连接磁盘镜像、开发板存储卡或 U 盘时，再根据明确的设备名称进行操作。
+设备仍在被程序使用时，系统通常会拒绝卸载，以防正在访问的数据失去连接。
 
 ---
 
-## 十四、WSL与Windows文件互访
+## 十四、WSL中的文件系统关系
 
-WSL2 同时提供两种常用文件位置：Linux 文件系统和挂载到 `/mnt` 下的 Windows 文件系统。
+WSL2 同时连接 Linux 文件系统和 Windows 文件系统。
 
-### 1. 在WSL中访问Windows文件
+### 1. Linux用户主目录
 
-Windows 的 C 盘通常位于：
-
-```text
-/mnt/c
-```
-
-列出 Windows 用户目录：
-
-```bash
-ls /mnt/c/Users
-```
-
-进入当前 Windows 用户的桌面时，路径可能类似：
-
-```bash
-cd /mnt/c/Users/Windows用户名/Desktop
-```
-
-Windows 用户名和桌面实际位置因账户、语言及 OneDrive 配置而异，应先使用 `ls` 逐级确认。
-
-其他盘符采用相同规则，例如 D 盘通常为：
+WSL 用户 `student` 的主目录通常是：
 
 ```text
-/mnt/d
+/home/student
 ```
 
-### 2. 在Windows中访问WSL文件
+Linux 项目、编译目录和需要 Linux 权限语义的文件适合保存在这里。
 
-在 Windows 文件资源管理器地址栏输入：
+Windows 可以通过网络样式路径访问该目录：
 
 ```text
-\\wsl$
+\\wsl$\Ubuntu\home\student
 ```
 
-选择 Ubuntu 后，可以进入：
+这里的 `Ubuntu` 是 WSL 发行版名称。
+
+### 2. Windows磁盘
+
+WSL 通常把 Windows 盘符挂载到 `/mnt`：
 
 ```text
-\\wsl$\Ubuntu\home\Linux用户名
+Windows C:\      ↔ WSL /mnt/c
+Windows D:\      ↔ WSL /mnt/d
 ```
 
-> **图片占位：** Windows 文件资源管理器打开 `\\wsl$\Ubuntu\home\用户名`，标出与 WSL 中 `~` 对应的目录。
-
-### 3. 从WSL打开资源管理器
-
-在 WSL 终端的练习目录中执行：
-
-```bash
-cd ~/linux-course/filesystem
-explorer.exe .
-```
-
-Windows 文件资源管理器会打开当前 WSL 目录。命令末尾的 `.` 表示当前目录。
-
-> **图片占位：** 左侧为 WSL 终端执行 `explorer.exe .`，右侧为打开的 Windows 文件资源管理器，展示二者指向同一目录。
-
-### 4. 转换Windows与Linux路径
-
-将 Windows 路径转换为 WSL 路径：
-
-```bash
-wslpath 'C:\Users\Public'
-```
-
-典型输出：
+例如：
 
 ```text
-/mnt/c/Users/Public
+Windows：C:\Users\Public\Documents
+WSL：    /mnt/c/Users/Public/Documents
 ```
 
-将 WSL 路径转换为 Windows 路径：
+> **图片占位：** 一张路径映射示意图，展示 Windows 的 `C:\Users\Public`、WSL 的 `/mnt/c/Users/Public` 和 WSL 主目录 `\\wsl$\Ubuntu\home\用户名` 之间的关系。
 
-```bash
-wslpath -w ~/linux-course/filesystem
-```
+### 3. 项目位置选择
 
-输出会是可供 Windows 程序使用的路径。
-
-### 5. 项目应该放在哪里
-
-需要在 Linux 中频繁编译、运行脚本或使用 Linux 权限的项目，建议放在 WSL 用户主目录：
+需要由 Linux 编译器、包管理器、脚本和权限系统频繁操作的项目，放在：
 
 ```text
 /home/用户名/projects
 ```
 
-需要由 Windows 程序直接管理的大型普通文件，可以保存在 `/mnt/c`、`/mnt/d` 等位置。
-
-在同一项目中保持统一的路径环境，可以减少权限、换行符、路径格式和文件系统性能差异带来的问题。
-
----
-
-## 十五、路径操作的安全习惯
-
-文件操作命令会直接作用于解析后的目标路径。养成以下习惯可以避免误操作：
-
-### 1. 先确认当前位置
-
-```bash
-pwd
-```
-
-### 2. 再确认目标内容
-
-```bash
-ls -la 目标路径
-```
-
-### 3. 使用Tab补全
-
-补全可以验证路径存在，并减少拼写错误。
-
-### 4. 给包含空格的路径加引号
-
-```bash
-cd "/mnt/c/Users/Public/My Project"
-```
-
-### 5. 不以root身份完成普通文件练习
-
-本章所有练习都应在普通用户主目录中完成，不需要 `sudo`。
-
-### 6. 区分相对路径的起点
-
-同一个相对路径在不同工作目录下会指向不同位置。复制、移动或删除文件前，先执行 `pwd`。
-
----
-
-## 十六、综合实践
-
-### 实践目标
-
-建立一个小型 C 项目目录，分别使用绝对路径、相对路径和符号链接访问它，并确认它所在的文件系统。
-
-### 第1步：创建目录结构
-
-```bash
-cd ~/linux-course/filesystem
-mkdir -p sensor-demo/src sensor-demo/include sensor-demo/build sensor-demo/docs
-```
-
-创建文件：
-
-```bash
-touch sensor-demo/src/main.c
-touch sensor-demo/include/sensor.h
-echo "Sensor demo documentation" > sensor-demo/docs/readme.txt
-```
-
-### 第2步：使用相对路径访问
-
-```bash
-cd sensor-demo/src
-pwd
-ls ../include
-cat ../docs/readme.txt
-```
-
-回答：
-
-1. 当前目录的绝对路径是什么？
-2. `../include` 中的 `..` 指向哪里？
-3. 从 `src` 到 `docs/readme.txt` 为什么需要先返回上一级？
-
-### 第3步：创建符号链接
-
-```bash
-cd ~/linux-course/filesystem/sensor-demo
-ln -s docs/readme.txt README
-ls -l README
-cat README
-```
-
-使用 `readlink` 查看链接目标：
-
-```bash
-readlink README
-readlink -f README
-```
-
-### 第4步：检查文件类型
-
-```bash
-file src/main.c
-file README
-stat docs/readme.txt
-```
-
-观察普通文件、符号链接和 inode 信息。
-
-### 第5步：确认文件系统
-
-```bash
-df -h ~/linux-course/filesystem/sensor-demo
-findmnt -T ~/linux-course/filesystem/sensor-demo
-```
-
-`findmnt -T` 会查找指定路径所在的文件系统和挂载点。
-
-### 第6步：从Windows打开项目目录
-
-```bash
-cd ~/linux-course/filesystem/sensor-demo
-explorer.exe .
-```
-
-在 Windows 文件资源管理器中确认 `src`、`include`、`build` 和 `docs` 目录均存在。
-
-> **图片占位：** WSL 中的 `sensor-demo` 项目结构与 Windows 文件资源管理器中的同一目录并排展示。
-
----
-
-## 十七、常见问题
-
-### `cd`提示No such file or directory
-
-表示 Shell 无法按当前路径找到目标。依次检查：
-
-1. 执行 `pwd` 确认相对路径起点。
-2. 执行 `ls` 查看实际名称。
-3. 检查大小写。
-4. 对路径使用 Tab 补全。
-5. 路径含空格时使用引号。
-
-### `ls`看不到刚创建的隐藏文件
-
-使用：
-
-```bash
-ls -la
-```
-
-名称以 `.` 开头的文件默认不会出现在普通 `ls` 输出中。
-
-### Windows路径复制到WSL后无法使用
-
-Windows 路径：
+需要由 Windows 软件直接管理的大型普通文件，可以放在：
 
 ```text
-C:\Users\Public\Documents
+/mnt/c
+/mnt/d
 ```
 
-对应 WSL 路径通常为：
+一个项目应尽量固定在同一种文件系统环境中，减少路径格式、权限、大小写、换行符和文件系统性能差异带来的问题。
+
+---
+
+## 十五、从文件路径理解工程结构
+
+考虑一个嵌入式应用项目：
 
 ```text
-/mnt/c/Users/Public/Documents
+sensor-app/
+├── src/
+│   ├── main.c
+│   └── sensor.c
+├── include/
+│   └── sensor.h
+├── config/
+│   └── app.conf
+├── tests/
+│   └── test_sensor.c
+├── docs/
+│   └── protocol.md
+└── build/
 ```
 
-也可以交给 `wslpath` 转换：
+每个目录承担清晰职责：
 
-```bash
-wslpath 'C:\Users\Public\Documents'
+| 目录 | 职责 |
+| --- | --- |
+| `src` | 程序实现 |
+| `include` | 对外头文件 |
+| `config` | 运行配置 |
+| `tests` | 测试代码 |
+| `docs` | 项目文档 |
+| `build` | 构建产物 |
+
+假设当前目录为 `sensor-app/src`：
+
+```text
+main.c                  当前目录中的源文件
+../include/sensor.h     上级目录中的头文件
+../config/app.conf      上级目录中的配置文件
+../build                上级目录中的构建目录
 ```
 
-### `~`为什么有时没有被展开
+这种路径关系不会依赖项目位于 `/home/student/projects` 还是其他位置，因此项目内部常使用相对关系组织构建和配置。
 
-`~` 的展开由 Shell 完成。它必须出现在路径开头的合适位置。以下写法有效：
+---
 
-```bash
-cd ~/projects
+## 十六、概念练习
+
+### 练习一：还原绝对路径
+
+已知当前目录：
+
+```text
+/home/student/project/src/module
 ```
 
-把它放入双引号后不会按预期展开：
+写出下列相对路径对应的绝对位置：
 
-```bash
-echo "~/projects"
+```text
+main.c
+../sensor.c
+../../include/sensor.h
+../../../docs/readme.md
 ```
 
-需要在引号中构造主目录路径时，使用 `$HOME`：
+参考结果：
 
-```bash
-echo "$HOME/projects"
+```text
+/home/student/project/src/module/main.c
+/home/student/project/src/sensor.c
+/home/student/project/include/sensor.h
+/home/student/docs/readme.md
 ```
 
-### 符号链接显示为红色或无法打开
+### 练习二：写出相对路径
 
-通常表示链接目标不存在。检查：
+已知当前目录：
 
-```bash
-ls -l 链接名称
-readlink 链接名称
-readlink -f 链接名称
+```text
+/home/student/project/src
 ```
 
-确认目标是否被移动、删除，或相对链接的起点是否理解错误。
+目标文件：
 
-### `/proc`中的文件大小看起来不正常
+```text
+/home/student/project/docs/protocol.md
+```
 
-`/proc` 是内核动态生成的虚拟文件系统。目录项显示的大小不一定代表读取时能够获得的数据量，也不对应普通磁盘占用。
+对应相对路径：
+
+```text
+../docs/protocol.md
+```
+
+### 练习三：判断文件系统对象
+
+判断以下对象最可能属于哪种类型：
+
+| 路径 | 类型 |
+| --- | --- |
+| `/home/student/main.c` | 普通文件 |
+| `/home/student/projects` | 目录 |
+| `/dev/ttyUSB0` | 字符设备 |
+| `/proc/cpuinfo` | proc虚拟文件 |
+| `current -> releases/v2` | 符号链接 |
+| `/dev/sda` | 块设备 |
+
+### 练习四：分析WSL路径
+
+将下列 Windows 路径写成 WSL 中的对应位置：
+
+```text
+C:\Users\Public\Downloads
+D:\datasets\sensor
+```
+
+参考结果：
+
+```text
+/mnt/c/Users/Public/Downloads
+/mnt/d/datasets/sensor
+```
+
+---
+
+## 十七、常见概念误区
+
+### 根目录就是root用户主目录
+
+二者位置不同：
+
+```text
+/          根目录
+/root      root用户主目录
+```
+
+### 文件扩展名决定文件能否执行
+
+Linux 是否允许执行文件主要取决于权限、文件格式和解释器。扩展名只表达用途。
+
+### 文件名和文件数据是一回事
+
+文件名属于目录项，它关联 inode；inode 再关联文件元数据和数据。硬链接正是多个名称关联同一 inode。
+
+### `/proc`中的内容都保存在磁盘上
+
+`/proc` 的内容由内核动态生成，反映当前运行状态。
+
+### Windows路径可以直接粘贴到Linux命令中
+
+Windows 与 Linux 使用不同路径表示。WSL 中应把盘符转换为 `/mnt/盘符小写`，并把 `\` 转为 `/`。
+
+### 删除符号链接等于删除目标
+
+符号链接和目标是两个文件系统对象。删除链接通常只删除链接本身，不会删除目标；通过链接访问后主动修改目标内容则会影响目标。
 
 ---
 
 ## 本章小结
 
-Linux 使用从 `/` 开始的单一目录树组织系统资源。绝对路径从根目录开始，相对路径从当前工作目录开始；`.`、`..`、`~` 和 `cd -` 分别用于表示当前目录、上级目录、用户主目录和上一次工作目录。
+Linux 使用从 `/` 开始的单一目录树。绝对路径从根目录开始，相对路径从当前工作目录开始；`.`、`..` 和 `~` 分别表达当前目录、上级目录和用户主目录。
 
-`/home` 保存普通用户文件，`/etc` 保存系统配置，`/usr` 保存程序和开发资源，`/var` 保存变化数据。`/dev`、`/proc` 和 `/sys` 将设备与内核运行信息纳入文件接口。文件系统通过挂载点接入目录树，WSL 则将 Windows 磁盘挂载到 `/mnt/c`、`/mnt/d` 等位置。
+普通文件、目录、符号链接、设备节点和虚拟文件系统都进入同一命名空间。`/home` 保存用户文件，`/etc` 保存系统配置，`/usr` 保存程序与开发资源，`/var` 保存变化数据；`/dev`、`/proc` 和 `/sys` 分别表达设备接口、进程与内核状态、设备与驱动关系。
 
-理解路径的起点、文件类型和挂载关系后，下一章中的复制、移动、搜索、管道和重定向才有明确的操作对象。
+文件系统通过挂载点接入目录树。WSL 将 Windows 磁盘挂载到 `/mnt/c`、`/mnt/d` 等位置，同时允许 Windows 通过 `\\wsl$` 访问 Linux 用户目录。
+
+下一章将把这些概念转化为实际操作：查看和切换目录、创建文件、复制与移动数据、搜索内容，并使用管道和重定向组合命令。
 
 ---
 
 ## 本章检查点
 
-- 能解释根目录 `/`、主目录 `~` 和当前目录 `.` 的区别。
+- 能解释根目录、主目录和当前工作目录的区别。
 - 能为同一文件写出绝对路径和相对路径。
-- 能使用 `pwd`、`cd`、`ls`、`mkdir`、`touch` 和 `file`。
-- 能读懂 `ls -l` 输出中的文件类型字符。
+- 能说明 `/`、`.`、`..` 和 `~` 的含义。
+- 能解释 Linux 文件名的大小写和隐藏规则。
 - 能说明 `/home`、`/etc`、`/usr`、`/var` 和 `/tmp` 的用途。
-- 能解释 `/dev`、`/proc`、`/sys` 为什么不等同于普通磁盘目录。
-- 能创建并检查符号链接。
-- 能解释文件系统挂载到目录的含义。
-- 能在 WSL 中访问 Windows 磁盘，并从 Windows 打开 WSL 主目录。
-- 能说明为什么 Linux 项目适合保存在 WSL 用户主目录中。
+- 能区分普通文件、目录、链接、字符设备和块设备。
+- 能解释文件名、inode 和文件数据之间的关系。
+- 能比较符号链接与硬链接。
+- 能说明 `/dev`、`/proc` 和 `/sys` 的职责。
+- 能解释设备、分区、文件系统和挂载点之间的关系。
+- 能写出 Windows 路径在 WSL 中的常见映射形式。
