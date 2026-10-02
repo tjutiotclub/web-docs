@@ -182,7 +182,9 @@ wsl --list --online
 wsl --install -d Ubuntu
 ```
 
-该命令会启用 WSL 所需的 Windows 功能，并安装 Ubuntu。命令提示需要重启时，保存其他程序中的工作并重新启动 Windows。
+该命令会检查并启用 WSL 所需组件，然后下载、安装并启动 Ubuntu。在当前版本的 WSL 中，安装完成后通常会直接进入 Ubuntu 的首次初始化流程，并在同一个终端窗口中要求创建 Linux 用户名和密码，不需要先重新启动 Windows。
+
+如果系统明确提示必须重启，保存其他程序中的工作并重新启动 Windows；重启后再次打开 Ubuntu，继续首次初始化即可。
 
 如果不需要提前选择发行版，也可以使用微软提供的默认安装命令：
 
@@ -192,17 +194,19 @@ wsl --install
 
 默认安装通常会同时安装 Ubuntu。
 
-> **图片占位：** `wsl --install -d Ubuntu` 执行完成后的 PowerShell 界面，保留安装成功或要求重启的提示。
+> **图片占位：** `wsl --install -d Ubuntu` 的完整输出，展示 Ubuntu 下载、安装完成后直接进入用户名创建界面的过程。
 
 #### 第5步：完成Ubuntu首次初始化
 
-重启后，从开始菜单打开 Ubuntu。第一次启动需要解压和初始化文件系统，随后会要求创建 Linux 用户：
+Ubuntu 安装完成后通常会在当前终端中直接初始化文件系统，并要求创建 Linux 用户：
 
 ```text
 Enter new UNIX username:
 New password:
 Retype new password:
 ```
+
+如果此前因为系统提示而重新启动了 Windows，则从开始菜单打开 Ubuntu，进入同样的初始化流程。
 
 用户名建议使用小写英文字母和数字，不包含空格。输入密码时终端不会显示字符或星号，这是正常的安全行为。
 

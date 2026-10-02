@@ -3,6 +3,11 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent / '_ext'))
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
@@ -16,6 +21,12 @@ release = '1.0'
 
 extensions = [
     'myst_parser',
+    'sphinx_design',
+    'home_cards',
+]
+
+myst_enable_extensions = [
+    'colon_fence',
 ]
 
 

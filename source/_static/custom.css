@@ -1,9 +1,91 @@
-/* 解锁正文最大宽度（外层） */
-.wy-nav-content-wrap {
+:root {
+    --docs-ink: #27313d;
+    --docs-muted: #647180;
+    --docs-line: #d9e0e7;
+    --docs-blue: #2980b9;
+    --docs-soft: #f6f8fa;
+}
+
+/* Preserve the wide documentation layout for ultrawide displays. */
+.wy-nav-content-wrap,
+.wy-nav-content {
     max-width: none;
 }
 
-/* 解锁正文最大宽度（内层，保险） */
-.wy-nav-content {
-    max-width: none;
+.rst-content > section > h1 {
+    max-width: 980px;
+    margin-bottom: 1rem;
+    color: var(--docs-ink);
+    font-size: clamp(1.8rem, 3vw, 2.55rem);
+    line-height: 1.2;
+}
+
+.rst-content > section > h1 + p,
+.rst-content > section > h1 + p + p {
+    max-width: 980px;
+    color: var(--docs-muted);
+    font-size: 1.05rem;
+    line-height: 1.8;
+}
+
+.sd-btn {
+    margin: .15rem .55rem 1rem 0;
+}
+
+.home-auto-grid {
+    display: grid;
+    margin: 1rem 0 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+}
+
+.home-auto-card {
+    min-height: 180px;
+    padding: 1.25rem 1.35rem;
+    border: 1px solid var(--docs-line);
+    border-top: 3px solid var(--docs-blue);
+    border-radius: 3px;
+    background: white;
+}
+
+.home-auto-kicker {
+    margin: 0 0 .35rem;
+    color: var(--docs-muted);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+}
+
+.home-auto-title {
+    margin: 0 0 .55rem;
+    font-size: 1.2rem;
+}
+
+.home-auto-title a {
+    color: var(--docs-ink);
+}
+
+.home-auto-summary {
+    display: -webkit-box;
+    margin: 0;
+    color: var(--docs-muted);
+    line-height: 1.65;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+}
+
+.home-auto-more {
+    margin: .85rem 0 0;
+    font-size: .9rem;
+}
+
+.home-auto-more a {
+    font-weight: 600;
+}
+
+@media screen and (max-width: 700px) {
+    .home-auto-grid {
+        grid-template-columns: 1fr;
+    }
 }
